@@ -1,11 +1,10 @@
 package delivery
 
-// Данный пакет отвечает за создание end-point'ов
+// Пакет delivery отвечает за создание end-point'ов
 // приложения и их обработку
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 
 	"github.com/AscaroLabs/EateryGlass/pkg/database/postgresql/storage"
@@ -14,62 +13,77 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Функция создает обработчики для end-point'ов
+// MakeHandler создает обработчики для end-point'ов
 // Нужна для того что бы пробросить указатель на
 // БД внуть обработчиков и обработчики удовленворяли
 // сигнатуре gin.HandlerFunc
-func MakeHandler(handler_name string, db *sql.DB) func(c *gin.Context) {
-	switch handler_name {
+func MakeHandler(handlerName string, db *sql.DB) func(c *gin.Context) {
+	switch handlerName {
+	// Обработчик для "/restaurants"
 	case "getRestaurants":
 		return func(c *gin.Context) {
-			rest, err := storage.GetRestaurants(db)
+
+			// Забираем рестораны из БД
+			restaurants, err := storage.GetRestaurants(db)
 			if err != nil {
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Can't get restaurants"})
+				// Отправляем сообщение об ошибке в качестве ответа
+				c.IndentedJSON(http.StatusBadRequest,
+					gin.H{"error": err.Error()})
 				return
 			}
-			c.IndentedJSON(http.StatusOK, rest)
+
+			// Возвращаем данные о ресторанах
+			c.IndentedJSON(http.StatusOK, restaurants)
 		}
+	// Обработчик для "/tables"
 	case "getTables":
 		return func(c *gin.Context) {
-			log.Printf("\n-----* /tables *-----\n")
-			log.Printf("\n--* Query: %v *--\n", c.Request.URL.RawPath)
-			volume, ok_volume := c.GetQuery("volume")
-			appropriate_time, ok_time := c.GetQuery("time")
 
-			log.Printf("\nvolume(%v)[%v] and time(%v)[%v] getted!\n",
-				volume, ok_volume,
-				appropriate_time, ok_time)
+			// Забираем данные из GET запроса
+			// e.g. tables?volume=7&time=2022-01-02T16:06:06Z
+			volume, okVolume := c.GetQuery("volume")
+			appropriateTime, okTime := c.GetQuery("time")
 
-			if !(ok_volume && ok_time) {
-				log.Printf("\n!!!---* ERROR *---!!!\n")
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Not enough parameters!"})
+			// Возвращаем ошибку, если необходимые параметры не были переданы
+			if !(okVolume && okTime) {
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Not enough parameters!"})
 				return
 			}
-			TablesByRestaurants, err := selection.SelectTables(db, volume, appropriate_time)
+
+			// Получаем доступные столики из БД
+			tables, err := selection.SelectTables(db, volume, appropriateTime)
 			if err != nil {
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Can't get tables"})
+				// Отправляем сообщение об ошибке в качестве ответа
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
 			}
-			c.IndentedJSON(http.StatusOK, TablesByRestaurants)
+
+			// Возвращаем данные о возможных вариантах
+			c.IndentedJSON(http.StatusOK, tables)
 		}
+
+	// Обработчик для "/reservations"
 	case "postReservations":
 		return func(c *gin.Context) {
-			var newReservation structures.RawReservation
-			// type RawReservation struct {
-			// 	Table_id    string `json:"table_id"`
-			// 	Start_time  string `json:"start_time"`
-			// 	Reserved_by RawClient `json:"reserved_by"`
-			// }
-			if err := c.BindJSON(&newReservation); err != nil {
-				log.Printf("Smth wrong with parse JSON %v", err)
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "wrong JSON!"})
+
+			// Создаем переменную для тела POST запроса
+			var rawReservation structures.RawReservation
+
+			// Пытаемся спарсить JSON из тела ответа
+			// Если не получилось, то отправляем ошибку
+			if err := c.BindJSON(&rawReservation); err != nil {
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-			res, err := storage.PostReservations(db, newReservation)
+
+			// Пытаемся положить в БД новую бронь
+			reservation, err := storage.PostReservations(db, rawReservation)
 			if err != nil {
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Can't crreate new reservation!"})
+				// Отправляем сообщение об ошибке в качестве ответа
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 				return
 			}
-			c.IndentedJSON(http.StatusCreated, res)
+			c.IndentedJSON(http.StatusCreated, reservation)
 		}
 	default:
 		return nil

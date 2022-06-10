@@ -26,7 +26,7 @@ type Config struct {
 func NewConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal(err)
 	}
 	return &Config{
 		DB_host:     os.Getenv("DB_HOST_ADDR"),

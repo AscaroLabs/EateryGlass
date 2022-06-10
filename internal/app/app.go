@@ -5,19 +5,21 @@ package app
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AscaroLabs/EateryGlass/internal/config"
 	"github.com/AscaroLabs/EateryGlass/internal/delivery"
 	"github.com/AscaroLabs/EateryGlass/pkg/database/postgresql/storage"
 )
 
+// Run запускает приложение
 func Run(cfg *config.Config) {
-	log.Println("(===============*- CREATE DB -*===============)")
+
+	// Инициализируем новый экземпляр sql.BD
 	db := storage.NewDB(cfg)
-	log.Println("(===============*- DB CREATED -*===============)")
-	log.Println("(===============*- CREATE ROUTER -*===============)")
+
+	// Инициализируем новый экземпляр gin.Engine
 	router := delivery.NewRouter(db)
-	log.Println("(===============*- ROUTER CREATED -*===============)")
+
+	// Запускаем сервер
 	router.Run(fmt.Sprintf("%s:%s", cfg.App_host, cfg.App_port))
 }

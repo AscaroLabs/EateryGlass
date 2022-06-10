@@ -152,41 +152,50 @@ type Table struct {
 
 ```sql
 CREATE TABLE restaurants (
+	-- уникальный индентификатор
+	id SERIAL PRIMARY KEY, 		
 
-	id SERIAL PRIMARY KEY, 		-- уникальный индентификатор
+	-- название ресторана
+	name TEXT NOT NULL,			
 
-	name TEXT NOT NULL,			-- название ресторана
+	-- среднее время ожидания
+	avg_time interval NOT NULL, 
 
-	avg_time interval NOT NULL, -- среднее время ожидания
+	-- средний чек
+	avg_price integer NOT NULL, 
 
-	avg_price integer NOT NULL, -- средний чек
-
-	UNIQUE(name)				-- констрейнт, не позволяющий
-);								-- добавлять одинаковые рестораны
+	-- констрейнт, не позволяющий
+	-- добавлять одинаковые рестораны
+	UNIQUE(name)				
+);								
 
 CREATE TABLE tables (
-
-	id SERIAL PRIMARY KEY,		-- уникальный идентификатор
+	-- уникальный идентификатор
+	id SERIAL PRIMARY KEY,		
 
 	-- ресторан, в котором находится столик
 	restaurant_id integer REFERENCES restaurants (id),
 
-	capacity integer NOT NULL	-- вместимость столика
+	-- вместимость столика
+	capacity integer NOT NULL	
 );
 
 CREATE TABLE clients (
+	-- уникальный идентификатор
+	id SERIAL PRIMARY KEY,		
+	
+	-- имя
+	name TEXT NOT NULL,			
 
-	id SERIAL PRIMARY KEY,		-- уникальный идентификатор
+	-- номер телефона
+	phone_number TEXT NOT NULL, 
 
-	name TEXT NOT NULL,			-- имя
-
-	phone_number TEXT NOT NULL, -- номер телефона
-
-	UNIQUE (name, phone_number)	-- констрейнт, не позволяющий
-);								-- добавлять одинаковых клиентов
+	-- констрейнт, не позволяющий
+	-- добавлять одинаковых клиентов
+	UNIQUE (name, phone_number)	
+);								
 
 CREATE TABLE reservations (
-
 	-- уникальный идентификатор
 	id SERIAL PRIMARY KEY,
 

@@ -9,9 +9,16 @@ import (
 
 func main() {
 
+	// Создаем новый объект config.Config
+	// (т.е. читаем переменные из .env файла)
 	cfg := config.NewConfig()
+	// Связываем новую функцию с closer'ом
+	// Это позволит очищать БД при завершении работы
+	// контейнера при получении сигнала SIGINT (ctrl+C)
 	closer.Bind(drop.Cleanup(cfg))
-	// defer storage.ExecFromFile(cfg, db, "drop_tables.sql")
+	// Запускаем приложение в отдельной горутине, что бы
+	// Основная горутина могла обрабатывать входящие сигналы
 	go app.Run(cfg)
+	// Блокируем основную горутину на получение сигналов
 	closer.Hold()
 }

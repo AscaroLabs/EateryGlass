@@ -1,5 +1,8 @@
 package storage
 
+// Данный пакет отвечает за хранение данных
+// и взаимодействия с базой данных
+
 import (
 	"context"
 	"database/sql"
@@ -15,7 +18,9 @@ import (
 	"github.com/lib/pq"
 )
 
-// Коннектимся к БД
+// Данная функция создает новый экземпляр sql.DB
+// А так же создает таблицы и заполняет их тестовыми данными
+// (функция FillDB)
 func NewDB(cfg *config.Config) *sql.DB {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.DB_user,
 		cfg.DB_password,
@@ -31,12 +36,12 @@ func NewDB(cfg *config.Config) *sql.DB {
 		log.Fatal(pingErr)
 	}
 
-	// Создаем и Заполняем таблички
 	FillDB(cfg, db)
 
 	return db
 }
 
+// Заполняем БД содержимым
 func FillDB(cfg *config.Config, db *sql.DB) {
 	ExecFromFile(cfg, db, "create_model.sql")
 	ExecFromFile(cfg, db, "fill_db.sql")
@@ -44,6 +49,8 @@ func FillDB(cfg *config.Config, db *sql.DB) {
 	ExecFromFile(cfg, db, "insert_reservations.sql")
 }
 
+// Функция исполняет команды из файла file_name,
+// хранящугося в директории /pkg/database/postgresql/storage/
 func ExecFromFile(cfg *config.Config, db *sql.DB, file_name string) error {
 	defer log.Println("==============================")
 
@@ -98,6 +105,7 @@ func ExecFromFile(cfg *config.Config, db *sql.DB, file_name string) error {
 	return nil
 }
 
+// Функция получает из БД данные о ресторанах
 func GetRestaurants(db *sql.DB) ([]structures.Restaurant, error) {
 	q := `
 		SELECT * FROM restaurants;
@@ -118,6 +126,8 @@ func GetRestaurants(db *sql.DB) ([]structures.Restaurant, error) {
 	return rests, nil
 }
 
+// Функция получает из БД столики, которые свободны на
+// момент t
 func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 	log.Printf("\n-----* start formattin t (%v)*-----\n", t)
 	ts := pq.FormatTimestamp(t)
@@ -151,6 +161,7 @@ func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 	return tables, nil
 }
 
+// Функция добавляет новую бронь в БД
 func PostReservations(db *sql.DB, res structures.RawReservation) (structures.Reservation, error) {
 
 	log.Printf("\nOh, hello, let's go, new reservation %v\n", res)
@@ -231,6 +242,7 @@ func PostReservations(db *sql.DB, res structures.RawReservation) (structures.Res
 	return addedReservation, nil
 }
 
+// Функция добавляет нового клиента в БД
 func AddClient(db *sql.DB, rclient structures.RawClient) (structures.Client, error) {
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)
@@ -264,6 +276,8 @@ func AddClient(db *sql.DB, rclient structures.RawClient) (structures.Client, err
 		Phone: rclient.Phone}, nil
 }
 
+// Функция получет из БД данные о клиенте
+// по его имени и номеру телефона
 func GetClientByRaw(db *sql.DB, rclient structures.RawClient) (structures.Client, error) {
 	squery := `
 	SELECT * FROM clients  WHERE

@@ -1,5 +1,8 @@
 package selection
 
+// Данный пакет отвечает за оптимальный выбор столиков
+// для бронирования
+
 import (
 	"database/sql"
 	"log"
@@ -12,6 +15,8 @@ import (
 	"github.com/AscaroLabs/EateryGlass/pkg/structures"
 )
 
+// Функця выбирает столики(или их комбинации),
+// которые подходят по времени и по вместимости
 func SelectTables(db *sql.DB, volume, appropriate_time string) (map[string][]structures.Table, error) {
 
 	log.Printf("\n-----* start time parsing (%v) *-----\n", appropriate_time)
@@ -53,6 +58,7 @@ func SelectTables(db *sql.DB, volume, appropriate_time string) (map[string][]str
 	return TablesByRestaurants, nil
 }
 
+// Ищем оптимальный вариант из возможных
 func findOpt(tab []structures.Table, n int) ([]structures.Table, bool) {
 	// количество столов в одном ресторане маленькое, так что можно обойтись без динамики
 	l := len(tab)

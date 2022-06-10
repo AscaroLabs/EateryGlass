@@ -1,5 +1,8 @@
 package delivery
 
+// Данный пакет отвечает за создание end-point'ов
+// приложения и их обработку
+
 import (
 	"database/sql"
 	"log"
@@ -11,6 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Функция создает обработчики для end-point'ов
+// Нужна для того что бы пробросить указатель на
+// БД внуть обработчиков и обработчики удовленворяли
+// сигнатуре gin.HandlerFunc
 func MakeHandler(handler_name string, db *sql.DB) func(c *gin.Context) {
 	switch handler_name {
 	case "getRestaurants":

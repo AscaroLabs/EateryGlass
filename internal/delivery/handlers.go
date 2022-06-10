@@ -17,7 +17,8 @@ func MakeHandler(handler_name string, db *sql.DB) func(c *gin.Context) {
 		return func(c *gin.Context) {
 			rest, err := storage.GetRestaurants(db)
 			if err != nil {
-				log.Fatal(err)
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Can't get restaurants"})
+				return
 			}
 			c.IndentedJSON(http.StatusOK, rest)
 		}
@@ -39,7 +40,7 @@ func MakeHandler(handler_name string, db *sql.DB) func(c *gin.Context) {
 			}
 			TablesByRestaurants, err := selection.SelectTables(db, volume, appropriate_time)
 			if err != nil {
-				log.Fatal(err)
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Can't get tables"})
 			}
 			c.IndentedJSON(http.StatusOK, TablesByRestaurants)
 		}
@@ -58,7 +59,8 @@ func MakeHandler(handler_name string, db *sql.DB) func(c *gin.Context) {
 			}
 			res, err := storage.PostReservations(db, newReservation)
 			if err != nil {
-				log.Fatal(err)
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Can't crreate new reservation!"})
+				return
 			}
 			c.IndentedJSON(http.StatusCreated, res)
 		}

@@ -1,4 +1,4 @@
-package main
+package drop
 
 import (
 	"context"
@@ -11,20 +11,24 @@ import (
 	"strings"
 
 	// "time"
+	"github.com/AscaroLabs/EateryGlass/internal/config"
+	"github.com/AscaroLabs/EateryGlass/pkg/database/postgresql/storage"
 	_ "github.com/lib/pq"
 )
 
-func main() {
-	db := NewDB()
+func Cleanup(cfg *config.Config) func() {
+	db := storage.NewDB(cfg)
 	// err := ExecFromFile(db, "create_model.sql")
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-
-	err := ExecFromFile(db, "drop_tables.sql")
-	if err != nil {
-		log.Fatal(err)
+	return func() {
+		err := storage.ExecFromFile(cfg, db, "drop_tables.sql")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
 }
 
 func NewDB() *sql.DB {
@@ -49,12 +53,12 @@ func NewDB() *sql.DB {
 	return db
 }
 
-func ExecFromFile(db *sql.DB, file_name string) error {
+func ExecFromFile(cfg *config.Config, db *sql.DB, file_name string) error {
 	// var ctx context.Context
 
 	file, err := os.Open(
 		fmt.Sprintf("%s/pkg/database/postgresql/storage/%s",
-			"/home/scaro/progr/EateryGlass/EateryGlass",
+			cfg.Main_dir,
 			file_name))
 
 	log.Printf("%s is opened", file_name)

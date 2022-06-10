@@ -185,6 +185,15 @@ func PostReservations(db *sql.DB, res structures.RawReservation) (structures.Res
 	log.Printf("\nGet client struct (%v)\nStart txn\n", client)
 
 	tx, err := db.BeginTx(ctx, nil)
+	// defer func() (structures.Reservation, error) {
+	// 	if r := recover(); r != nil {
+	// 		_ = tx.Rollback()
+	// 		return structures.Reservation{}, errors.New("Fail txn!")
+	// 	} else {
+	// 		return structures.Reservation{}, nil
+	// 	}
+	// }()
+
 	if err != nil {
 		return structures.Reservation{}, err
 	}

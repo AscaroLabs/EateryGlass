@@ -1,0 +1,1 @@
+INSERT INTO reservations (table_id,start_time,end_time,reserved_by) VALUES  (3, now()-'1 hours'::interval, now()+'1 hours'::interval, 1), (4, now()+'6 hours'::interval, now()+'8 hours'::interval, 2), (12, now()+'1 day'::interval, now()+'1 day 2 hours'::interval, 3), (3, now()+'1 hours'::interval, now()+'3 hours'::interval, 1);

@@ -1,0 +1,4 @@
+DROP TABLE clients CASCADE;
+DROP TABLE reservations CASCADE;
+DROP TABLE tables CASCADE;
+DROP TABLE restaurants CASCADE;

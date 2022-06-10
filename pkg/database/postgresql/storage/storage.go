@@ -126,13 +126,13 @@ func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 		SELECT DISTINCT tables.id, tables.restaurant_id, tables.capacity 
 		FROM tables LEFT OUTER JOIN reservations 
 		ON (tables.id = reservations.table_id) WHERE
-		(? + '2 hours'::interval <= start_time) OR 
-		(? >= end_time) OR 
+		($1::timestamp + '2 hours'::interval <= start_time) OR 
+		($1::timestamp >= end_time) OR 
 		(reservations.id IS NULL) 
 		ORDER BY tables.id;
 	`
 
-	rows, err := db.Query(q, ts, ts)
+	rows, err := db.Query(q, ts)
 	if err != nil {
 		return nil, err
 	}

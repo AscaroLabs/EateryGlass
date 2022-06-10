@@ -13,20 +13,29 @@ import (
 )
 
 func SelectTables(db *sql.DB, volume, appropriate_time string) (map[string][]structures.Table, error) {
+
 	log.Printf("\n-----* start time parsing (%v) *-----\n", appropriate_time)
+
 	t, err := time.Parse(time.RFC3339, appropriate_time)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Printf("\n-----* time parsed (%v) *-----\n", t)
+
 	n, err := strconv.Atoi(volume)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("\n-----* getting tables by time  *-----\n")
+
 	tables, err := storage.GetTablesByTime(db, t)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("\n-----* tables (%v) getted!  *-----\n", len(tables))
+
 	var TablesByRestaurants map[string][]structures.Table
 	TablesByRestaurants = make(map[string][]structures.Table)
 	for _, t := range tables {
@@ -56,7 +65,7 @@ func findOpt(tab []structures.Table, n int) ([]structures.Table, bool) {
 	}
 	var goodSubSets []goodSubSet
 	for i := 1; i-1 < l; i++ {
-		gen := combin.NewCombinationGenerator(n, i)
+		gen := combin.NewCombinationGenerator(l, i)
 		for gen.Next() {
 			subSetIndexes := gen.Combination(nil)
 			var capacity_sum int

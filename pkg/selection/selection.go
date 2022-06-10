@@ -57,7 +57,7 @@ func findOpt(tab []structures.Table, n int) ([]structures.Table, bool) {
 	// количество столов в одном ресторане маленькое, так что можно обойтись без динамики
 	l := len(tab)
 	if l == 0 {
-		return nil, false
+		return nil, true
 	}
 	type goodSubSet struct {
 		subSetIndexes []int
@@ -78,7 +78,7 @@ func findOpt(tab []structures.Table, n int) ([]structures.Table, bool) {
 		}
 	}
 	if len(goodSubSets) == 0 {
-		return nil, false
+		return nil, true
 	}
 	var minCapValue int
 	minCapValue = 100000000

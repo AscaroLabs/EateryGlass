@@ -52,7 +52,9 @@ func MakeHandler(handler_name string, db *sql.DB) func(c *gin.Context) {
 			// 	Reserved_by RawClient `json:"reserved_by"`
 			// }
 			if err := c.BindJSON(&newReservation); err != nil {
-				log.Fatal(err)
+				log.Printf("Smth wrong with parse JSON %v", err)
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "wrong JSON!"})
+				return
 			}
 			res, err := storage.PostReservations(db, newReservation)
 			if err != nil {

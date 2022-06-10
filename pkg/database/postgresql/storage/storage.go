@@ -152,23 +152,37 @@ func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 }
 
 func PostReservations(db *sql.DB, res structures.RawReservation) (structures.Reservation, error) {
+
+	log.Printf("\nOh, hello, let's go, new reservation %v\n", res)
+
 	ctx := context.Background()
 	squery := `
 		SELECT * FROM clients  WHERE
-		(name=?) AND 
-		(phone_number=?);
+		(name=$1) AND 
+		(phone_number=$2);
 	`
+
+	log.Printf("\nDo some query.........\n")
+
 	var client structures.Client
 	row := db.QueryRow(squery, res.Reserved_by.Name, res.Reserved_by.Phone)
+
+	log.Printf("\nStart scanning!\n")
+
 	if err := row.Scan(&client.ID, &client.Name, &client.Phone); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("\nOh, no such user!\n")
 			client, err = AddClient(db, res.Reserved_by)
 			if err != nil {
+				log.Printf("\nError when add new user!\n")
 				return structures.Reservation{}, err
 			}
+		} else {
+			return structures.Reservation{}, err
 		}
-		return structures.Reservation{}, err
 	}
+
+	log.Printf("\nGet client struct (%v)\nStart txn\n", client)
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -176,10 +190,10 @@ func PostReservations(db *sql.DB, res structures.RawReservation) (structures.Res
 	}
 	q := `
 	INSERT INTO reservations (table_id,start_time,end_time,reserved_by)
-	VALUES  (?, ?, ? + '2 H'::interval, ?);
+	VALUES  ($1, $2::timestamp, $2::timestamp + '2 H'::interval, $3);
 	`
 	t, err := time.Parse(time.RFC3339, res.Start_time)
-	_, execErr := tx.Exec(q, res.Table_id, pq.FormatTimestamp(t), pq.FormatTimestamp(t), client.ID)
+	_, execErr := tx.Exec(q, res.Table_id, pq.FormatTimestamp(t), client.ID)
 	if execErr != nil {
 		_ = tx.Rollback()
 		return structures.Reservation{}, execErr
@@ -188,7 +202,24 @@ func PostReservations(db *sql.DB, res structures.RawReservation) (structures.Res
 		return structures.Reservation{}, err
 	}
 
-	return structures.Reservation{}, nil
+	var addedReservation structures.Reservation
+
+	row = db.QueryRow(`
+		SELECT * FROM reservations
+		WHERE (table_id=$1) 
+		AND (start_time=$2::timestamp) 
+		AND (reserved_by=$3);
+	`, res.Table_id, pq.FormatTimestamp(t), client.ID)
+
+	if err := row.Scan(&addedReservation.ID,
+		&addedReservation.Table_id,
+		&addedReservation.Start_time,
+		&addedReservation.End_time,
+		&addedReservation.Reserved_by); err != nil {
+		return structures.Reservation{}, err
+	}
+
+	return addedReservation, nil
 }
 
 func AddClient(db *sql.DB, rclient structures.RawClient) (structures.Client, error) {
@@ -199,7 +230,7 @@ func AddClient(db *sql.DB, rclient structures.RawClient) (structures.Client, err
 	}
 	q := `
 	INSERT INTO clients (name, phone_number)
-	VALUES  (?, ?);
+	VALUES  ($1, $2);
 	`
 	_, execErr := tx.Exec(q, rclient.Name, rclient.Phone)
 	if execErr != nil {
@@ -227,8 +258,8 @@ func AddClient(db *sql.DB, rclient structures.RawClient) (structures.Client, err
 func GetClientByRaw(db *sql.DB, rclient structures.RawClient) (structures.Client, error) {
 	squery := `
 	SELECT * FROM clients  WHERE
-	(name=?) AND 
-	(phone_number=?);
+	(name=$1) AND 
+	(phone_number=$2);
 	`
 	var client structures.Client
 	row := db.QueryRow(squery, rclient.Name, rclient.Phone)

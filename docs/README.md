@@ -145,3 +145,67 @@ type Table struct {
 	Capacity      int    `json:"capacity"`
 }
 ```
+
+## Модель данных
+
+![Data Model](./img/eateryglass_model.drawio.png)
+
+```sql
+CREATE TABLE restaurants (
+
+	id SERIAL PRIMARY KEY, 		-- уникальный индентификатор
+
+	name TEXT NOT NULL,			-- название ресторана
+
+	avg_time interval NOT NULL, -- среднее время ожидания
+
+	avg_price integer NOT NULL, -- средний чек
+
+	UNIQUE(name)				-- констрейнт, не позволяющий
+);								-- добавлять одинаковые рестораны
+
+CREATE TABLE tables (
+
+	id SERIAL PRIMARY KEY,		-- уникальный идентификатор
+
+	-- ресторан, в котором находится столик
+	restaurant_id integer REFERENCES restaurants (id),
+
+	capacity integer NOT NULL	-- вместимость столика
+);
+
+CREATE TABLE clients (
+
+	id SERIAL PRIMARY KEY,		-- уникальный идентификатор
+
+	name TEXT NOT NULL,			-- имя
+
+	phone_number TEXT NOT NULL, -- номер телефона
+
+	UNIQUE (name, phone_number)	-- констрейнт, не позволяющий
+);								-- добавлять одинаковых клиентов
+
+CREATE TABLE reservations (
+
+	-- уникальный идентификатор
+	id SERIAL PRIMARY KEY,
+
+	-- столик, за которым закреплениа бронь
+	table_id integer REFERENCES tables (id),
+
+	-- начало действия брони
+	start_time timestamp NOT NULL,
+
+	-- конец действия брони (начало + 2 часа)
+	end_time timestamp NOT NULL,
+
+	-- id клиента за которым закреплена бронь
+	reserved_by int REFERENCES clients (id), 
+
+	-- констрейнт, не позволяющий:
+	-- во-первых, создавать одинаковые брони
+	-- во-вторых, двум клиентам бронировать
+	-- один и тот же столик на одно и то же время
+	UNIQUE (table_id, start_time)
+);
+```

@@ -1,6 +1,6 @@
 package storage
 
-// Данный пакет отвечает за хранение данных
+// Пакет storage отвечает за хранение данных
 // и взаимодействия с базой данных
 
 import (
@@ -18,12 +18,10 @@ import (
 	"github.com/lib/pq"
 )
 
-// NewDB создает новый экземпляр sql.DB
-// А так же создает таблицы и заполняет их тестовыми данными
+// NewDB создает новый экземпляр sql.DB, а так же создает таблицы и заполняет их тестовыми данными
 func NewDB(cfg *config.Config) *sql.DB {
 
-	// Стока для соединения с БД
-	// e.g. $ psql postgresql://dbmaster:5433/mydb?sslmode=require
+	// Стока для соединения с БД e.g. $ psql postgresql://dbmaster:5433/mydb?sslmode=require
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.DB_user,
 		cfg.DB_password,
 		cfg.DB_host,
@@ -65,7 +63,7 @@ func FillDB(cfg *config.Config, db *sql.DB) {
 }
 
 // ExecFromFile исполняет команды из файла file_name,
-// хранящугося в директории /pkg/database/postgresql/storage/
+// хранящегося в директории /pkg/database/postgresql/storage/
 func ExecFromFile(cfg *config.Config, db *sql.DB, file_name string) error {
 
 	// Контекст, используемый по умолчанию в go
@@ -173,7 +171,8 @@ func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 }
 
 // PostReservations добавляет новую бронь в БД
-func PostReservations(db *sql.DB, rawReservation structures.RawReservation) (structures.Reservation, error) {
+func PostReservations(db *sql.DB,
+	rawReservation structures.RawReservation) (structures.Reservation, error) {
 	ctx := context.Background()
 	squery := `
 		SELECT * FROM clients  WHERE
@@ -270,8 +269,7 @@ func AddClient(db *sql.DB, rawClient structures.RawClient) (structures.Client, e
 		Phone: rawClient.Phone}, nil
 }
 
-// GetClientByRaw получет из БД данные о клиенте
-// по его имени и номеру телефона
+// GetClientByRaw получет из БД данные о клиенте по его имени и номеру телефона
 func GetClientByRaw(db *sql.DB, rawClient structures.RawClient) (structures.Client, error) {
 	q := `
 	SELECT * FROM clients  WHERE

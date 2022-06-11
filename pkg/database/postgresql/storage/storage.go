@@ -56,10 +56,10 @@ func FillDB(cfg *config.Config, db *sql.DB) {
 	ExecFromFile(cfg, db, "fill_db.sql")
 
 	// Добавляем тестовых клиентов
-	ExecFromFile(cfg, db, "insert_clients.sql")
+	// ExecFromFile(cfg, db, "insert_clients.sql")
 
 	// Добавляем тестовые брони
-	ExecFromFile(cfg, db, "insert_reservations.sql")
+	// ExecFromFile(cfg, db, "insert_reservations.sql")
 }
 
 // ExecFromFile исполняет команды из файла file_name,

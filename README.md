@@ -104,33 +104,4 @@ $ docker run -it --name EateryFlass eateryglass
 
 Теперь осталось узнать IP адрес контейнера, в котором запущено приложение (_например_ методом описанным выше) и отправлять запросы.
 
-Например
-
-```bash
-$ curl "http://172.17.0.3:8000/tables?volume=2&time=2022-06-10T16:00:00Z"
-```
-```json
-{
-    "1": [
-        {
-            "id": "9",
-            "restaurant_id": "1",
-            "capacity": 2
-        }
-    ],
-    "2": [
-        {
-            "id": "11",
-            "restaurant_id": "2",
-            "capacity": 3
-        }
-    ],
-    "3": [
-        {
-            "id": "16",
-            "restaurant_id": "3",
-            "capacity": 3
-        }
-    ]
-}
-```
+[Примеры использование API в Postman](https://documenter.getpostman.com/view/21404316/Uz5Nishh)

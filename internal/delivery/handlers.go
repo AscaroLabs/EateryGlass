@@ -67,23 +67,23 @@ func MakeHandler(handlerName string, db *sql.DB) func(c *gin.Context) {
 		return func(c *gin.Context) {
 
 			// Создаем переменную для тела POST запроса
-			var rawReservation structures.RawReservation
+			var rawReservations []structures.RawReservation
 
 			// Пытаемся спарсить JSON из тела ответа
 			// Если не получилось, то отправляем ошибку
-			if err := c.BindJSON(&rawReservation); err != nil {
+			if err := c.BindJSON(&rawReservations); err != nil {
 				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
 
-			// Пытаемся положить в БД новую бронь
-			reservation, err := storage.PostReservations(db, rawReservation)
+			// Пытаемся положить в БД новые брони
+			reservations, err := storage.PostReservations(db, rawReservations)
 			if err != nil {
 				// Отправляем сообщение об ошибке в качестве ответа
 				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 				return
 			}
-			c.IndentedJSON(http.StatusCreated, reservation)
+			c.IndentedJSON(http.StatusCreated, reservations)
 		}
 	default:
 		return nil

@@ -172,7 +172,7 @@ func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 
 // PostReservations добавляет новую бронь в БД
 func PostReservations(db *sql.DB,
-	rawReservation structures.RawReservation) (structures.Reservation, error) {
+	rawReservations []structures.RawReservation) ([]structures.Reservation, error) {
 	ctx := context.Background()
 	squery := `
 		SELECT * FROM clients  WHERE
@@ -181,56 +181,72 @@ func PostReservations(db *sql.DB,
 	`
 	// Пытаемся найти клиента в БД
 	var client structures.Client
-	row := db.QueryRow(squery, rawReservation.Reserved_by.Name, rawReservation.Reserved_by.Phone)
+	row := db.QueryRow(squery, rawReservations[0].Reserved_by.Name, rawReservations[0].Reserved_by.Phone)
 	if err := row.Scan(&client.ID, &client.Name, &client.Phone); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// Добавляем клиента в БД
-			client, err = AddClient(db, rawReservation.Reserved_by)
+			client, err = AddClient(db, rawReservations[0].Reserved_by)
 			if err != nil {
-				return structures.Reservation{}, err
+				return nil, err
 			}
 		} else {
-			return structures.Reservation{}, err
+			return nil, err
 		}
 	}
 
 	// Начинаем транзакцию
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return structures.Reservation{}, err
+		return nil, err
 	}
 	q := `
 	INSERT INTO reservations (table_id,start_time,end_time,reserved_by)
 	VALUES  ($1, $2::timestamp, $2::timestamp + '2 H'::interval, $3);
 	`
-	startTime, err := time.Parse(time.RFC3339, rawReservation.Start_time)
-	_, execErr := tx.Exec(q, rawReservation.Table_id, pq.FormatTimestamp(startTime), client.ID)
-	if execErr != nil {
-		_ = tx.Rollback()
-		return structures.Reservation{}, execErr
-	}
-	if err := tx.Commit(); err != nil {
-		return structures.Reservation{}, err
+	startTime, err := time.Parse(time.RFC3339, rawReservations[0].Start_time)
+
+	// Добавление всех броней из одного запроса происходит в рамках одной транзакции,
+	// т.е. либо будут зарезервированы все столики из запроса, либо ни один.
+	// Это позволит избежать проблемы, когда у двух одновременных запросов пересекаются
+	// желаемые брони
+	for _, rawReservation := range rawReservations {
+		_, execErr := tx.Exec(q, rawReservation.Table_id, pq.FormatTimestamp(startTime), client.ID)
+		if execErr != nil {
+			_ = tx.Rollback()
+			return nil, execErr
+		}
 	}
 
-	// Теперь хотим вернуть добавленную бронь
-	var addedReservation structures.Reservation
-	row = db.QueryRow(`
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	// Теперь хотим вернуть добавленные брони
+	var addedReservations []structures.Reservation
+
+	for _, rawReservation := range rawReservations {
+
+		var addedReservation structures.Reservation
+
+		row = db.QueryRow(`
 		SELECT * FROM reservations
 		WHERE (table_id=$1) 
 		AND (start_time=$2::timestamp) 
 		AND (reserved_by=$3);
-	`, rawReservation.Table_id, pq.FormatTimestamp(startTime), client.ID)
+		`, rawReservation.Table_id, pq.FormatTimestamp(startTime), client.ID)
 
-	if err := row.Scan(&addedReservation.ID,
-		&addedReservation.Table_id,
-		&addedReservation.Start_time,
-		&addedReservation.End_time,
-		&addedReservation.Reserved_by); err != nil {
-		return structures.Reservation{}, err
+		if err := row.Scan(&addedReservation.ID,
+			&addedReservation.Table_id,
+			&addedReservation.Start_time,
+			&addedReservation.End_time,
+			&addedReservation.Reserved_by); err != nil {
+			return nil, err
+		}
+
+		addedReservations = append(addedReservations, addedReservation)
 	}
 
-	return addedReservation, nil
+	return addedReservations, nil
 }
 
 // AddClient добавляет нового клиента в БД

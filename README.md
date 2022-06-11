@@ -94,10 +94,10 @@ $ docker build -t eateryglass .
 В отдельном терминале выполните команду
 
 ```bash
-$ docker run -it --name EateryFlass eateryglass
+$ docker run -it --name EateryGlass eateryglass
 ```
 
-Команда запустит контейнер `EateryFlass` из образа `eateryglass` (имя можно поменять или оставить пустым)
+Команда запустит контейнер `EateryGlass` из образа `eateryglass` (имя можно поменять или оставить пустым)
 
 
 Дальше приложение само инициализирует базу данных, создаст необходимые таблицы и заполнит их тестовыми данными.
@@ -105,3 +105,4 @@ $ docker run -it --name EateryFlass eateryglass
 Теперь осталось узнать IP адрес контейнера, в котором запущено приложение (_например_ методом описанным выше) и отправлять запросы.
 
 [Примеры использование API в Postman](https://documenter.getpostman.com/view/21404316/Uz5Nishh)
+

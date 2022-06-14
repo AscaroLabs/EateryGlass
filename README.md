@@ -1,6 +1,10 @@
 # EateryGlass
 ## Система бронирования столиков в ресторане
 
+[Примеры использование API в Postman](https://documenter.getpostman.com/view/21404316/Uz5Nishh)
+
+[Документация](/docs/README.md)
+
 ---
 
 ## Установка и запуск
@@ -105,3 +109,5 @@ $ docker run -it --name EateryGlass eateryglass
 Теперь осталось узнать IP адрес контейнера, в котором запущено приложение (_например_ методом описанным выше) и отправлять запросы.
 
 [Примеры использование API в Postman](https://documenter.getpostman.com/view/21404316/Uz5Nishh)
+
+[]

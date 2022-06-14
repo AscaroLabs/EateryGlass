@@ -5,6 +5,7 @@ package selection
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
 	"time"
 
@@ -23,6 +24,11 @@ func SelectTables(db *sql.DB, volume,
 		return nil, err
 	}
 
+	// Проверяем время на корректность (рестораны работают с 9:00 до 23:00, т.к. бронь длится 2 часа, то
+	// забронировать столик после 20:59 не выйдет)
+	if requiredTime.Hour() < 9 || requiredTime.Hour() >= 21 {
+		return nil, errors.New("Wrong time!")
+	}
 	// Конвертируем вместимость из строки в чило
 	capacity, err := strconv.Atoi(volume)
 	if err != nil {

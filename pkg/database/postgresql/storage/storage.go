@@ -120,7 +120,7 @@ func ExecFromFile(cfg *config.Config, db *sql.DB, file_name string) error {
 // GetRestaurants получает из БД данные о ресторанах
 func GetRestaurants(db *sql.DB) ([]structures.Restaurant, error) {
 	q := `
-		SELECT * FROM restaurants;
+		SELECT * FROM restaurants ORDER BY (avg_time, avg_price);
 	`
 	rows, err := db.Query(q)
 	if err != nil {
@@ -174,6 +174,17 @@ func GetTablesByTime(db *sql.DB, t time.Time) ([]structures.Table, error) {
 func PostReservations(db *sql.DB,
 	rawReservations []structures.RawReservation) ([]structures.Reservation, error) {
 	ctx := context.Background()
+
+	startTime, err := time.Parse(time.RFC3339, rawReservations[0].Start_time)
+	if err != nil {
+		return nil, err
+	}
+
+	// Проверяем время на корректность
+	if hour, min, sec := startTime.Clock(); hour < 9 || hour > 21 || (hour == 21 && min+sec != 0) {
+		return nil, errors.New("Wrong time!")
+	}
+
 	squery := `
 		SELECT * FROM clients  WHERE
 		(name=$1) AND 
@@ -203,7 +214,6 @@ func PostReservations(db *sql.DB,
 	INSERT INTO reservations (table_id,start_time,end_time,reserved_by)
 	VALUES  ($1, $2::timestamp, $2::timestamp + '2 H'::interval, $3);
 	`
-	startTime, err := time.Parse(time.RFC3339, rawReservations[0].Start_time)
 
 	// Добавление всех броней из одного запроса происходит в рамках одной транзакции,
 	// т.е. либо будут зарезервированы все столики из запроса, либо ни один.

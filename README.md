@@ -110,4 +110,4 @@ $ docker run -it --name EateryGlass eateryglass
 
 [Примеры использование API в Postman](https://documenter.getpostman.com/view/21404316/Uz5Nishh)
 
-[]
+[Документация](/docs/README.md)
